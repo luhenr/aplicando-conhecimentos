@@ -218,9 +218,9 @@ class RLSnake {
       if (
         (state[0] == 0 && action == 0) ||
         (state[1] == 0 && action == 1) ||
-        (state[1] == 0 && action == 2)
+        (state[2] == 0 && action == 2)
       ) {
-        rewardForState -= 1;
+        rewardForState += -1;
       }
       if (
         (state[this.isAheadClearIndex] == 1 &&
@@ -261,7 +261,7 @@ class RLSnake {
       snake.rotateY = -1 * isRight;
       snake.rotateX = 0;
     } else if (snake.rotateX == -1) {
-      snake.rotateY = -1 * isRight;
+      snake.rotateY = 1 * isRight;
       snake.rotateX = 0;
     } else if (snake.rotateY == 1) {
       snake.rotateX = 1 * isRight;
@@ -303,13 +303,18 @@ class RLSnake {
     });
     q = items;
 
+    let equalIndexCount = 1;
+    if (q[0] == q[1]) {
+      equalIndexCount++;
+      if (q[1] == q[2]) equalIndexCount++;
+    }
+
     if (!appleEated) {
       this.noEatLoopCount++;
     }
 
     if (this.noEatLoopCount > this.maxNoEatLoopCount) {
       this.noEatLoopCount = 0;
-      //gameOver();
       return;
     }
 
@@ -324,23 +329,17 @@ class RLSnake {
     let headTail = snake.tail[snake.tail.length - 1];
     let rx = snake.rotateX;
     let ry = snake.rotateY;
+    let size = snake.size;
+    //wall
     if (
-      // parede
       (ry == 1 && headTail.x == 0) ||
-      (rx == 1 && headTail.y == 0) ||
+      (rx == 1 && headTail.y + size == canvas.height) ||
       (ry == -1 && headTail.x + size == canvas.width) ||
       (rx == -1 && headTail.y == 0)
     ) {
       this.state[this.isRightClearIndex] = 0;
     }
-    if (
-      (ry == 1 && headTail.y + size == canvas.height) ||
-      (rx == 1 && headTail.x + size == canvas.width) ||
-      (ry == -1 && headTail.y == 0) ||
-      (rx == -1 && headTail.x == 0)
-    ) {
-      this.state[this.isAheadClearIndex] = 0;
-    }
+
     if (
       (ry == 1 && headTail.x + size == canvas.width) ||
       (rx == 1 && headTail.y == 0) ||
@@ -350,19 +349,28 @@ class RLSnake {
       this.state[this.isLeftClearIndex] = 0;
     }
 
+    if (
+      (ry == 1 && headTail.y + size == canvas.height) ||
+      (rx == 1 && headTail.x + size == canvas.width) ||
+      (ry == -1 && headTail.y == 0) ||
+      (rx == -1 && headTail.x == 0)
+    ) {
+      this.state[this.isAheadClearIndex] = 0;
+    }
+
     for (let i = 0; i < snake.tail.length - 2; i++) {
       let ithTail = snake.tail[i];
       if (rx == 0 && headTail.y == ithTail.y) {
         correspondingSize = ry == 1 ? -size : size;
-        if ((headTail.x = ithTail.x + correspondingSize)) {
+        if (headTail.x == ithTail.x + correspondingSize) {
           this.state[this.isLeftClearIndex] = 0;
         }
         if (headTail.x == ithTail.x - correspondingSize) {
           this.state[this.isRightClearIndex] = 0;
         }
       } else if (ry == 0 && headTail.x == ithTail.x) {
-        correspondingSize = rx == 1 ? -size : size;
-        if ((headTail.y = ithTail.y + correspondingSize)) {
+        let correspondingSize = rx == 1 ? -size : size;
+        if (headTail.y == ithTail.y + correspondingSize) {
           this.state[this.isRightClearIndex] = 0;
         }
         if (headTail.y == ithTail.y - correspondingSize) {
@@ -379,50 +387,44 @@ class RLSnake {
       if (
         ry == 0 &&
         headTail.y == ithTail.y &&
-        headTail.x + ry * size == ithTail.x
+        headTail.x + rx * size == ithTail.x
       ) {
         this.state[this.isAheadClearIndex] = 0;
       }
     }
     if (headTail.x == apple.x && ry != 0) {
-      if (ry == 1 && headTail.y < apple.y) {
+      if (ry == 1 && headTail.y < apple.y)
         this.state[this.isAppleAheadIndex] = 1;
-      }
-      if (ry == -1 && headTail.y > apple.y) {
+      if (ry == -1 && headTail.y > apple.y)
         this.state[this.isAppleAheadIndex] = 1;
-      }
     } else if (headTail.y == apple.y && rx != 0) {
-      if (rx == 1 && headTail.x < apple.x) {
+      if (rx == 1 && headTail.x < apple.x)
         this.state[this.isAppleAheadIndex] = 1;
-      }
-      if (rx == -1 && headTail.x > apple.x) {
+      if (rx == -1 && headTail.x > apple.x)
         this.state[this.isAppleAheadIndex] = 1;
-      }
     } else {
       let index = -1;
       if (ry == 1 && apple.x > headTail.x) {
         index = this.isAppleLeftIndex;
-      } else if (ry == 1 ** apple.x < headTail.x) {
+      } else if (ry == 1 && apple.x < headTail.x) {
         index = this.isAppleRightIndex;
       }
       if (ry == -1 && apple.x > headTail.x) {
         index = this.isAppleRightIndex;
-      } else if (ry == -1 && apple.x > headTail.x) {
+      } else if (ry == -1 && apple.x < headTail.x) {
         index = this.isAppleLeftIndex;
       }
       if (rx == 1 && apple.y > headTail.y) {
         index = this.isAppleRightIndex;
-      } else if (rx == 1 && apple.y > headTail.y) {
+      } else if (rx == 1 && apple.y < headTail.y) {
         index = this.isAppleLeftIndex;
       }
       if (rx == -1 && apple.y > headTail.y) {
         index = this.isAppleLeftIndex;
-      } else if (rx == -1 && apple.y > headTail.y) {
+      } else if (rx == -1 && apple.y < headTail.y) {
         index = this.isAppleRightIndex;
       }
-      if (index != -1) {
-        this.state[index] = 1;
-      }
+      if (index != -1) this.state[index] = 1;
     }
   }
 }
